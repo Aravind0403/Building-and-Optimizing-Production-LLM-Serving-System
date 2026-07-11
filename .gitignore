@@ -1,0 +1,4 @@
+
+cat >> .gitignore << 'EOF'
+.DS_Store
+**/.DS_Store

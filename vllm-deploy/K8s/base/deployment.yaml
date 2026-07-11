@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-inference
+  labels:
+    app: vllm-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-engine
+  template:
+    metadata:
+      labels:
+        app: vllm-engine
+    spec:
+      containers:
+      - name: vllm-container
+        # Bypasses the massive GPU layers entirely by using the targeted CPU runtime
+        image: vllm/vllm-cpu:v0.6.4.post1
+        imagePullPolicy: IfNotPresent
+        args: [
+          "--model", "mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+          "--port", "8000",
+          "--device", "cpu"
+        ]
+        env:
+        - name: VLLM_TARGET_DEVICE
+          value: "cpu"
+        ports:
+        - containerPort: 8000
+          name: http
+        resources:
+          requests:
+            cpu: "1"        # Lowered from 2 to clear scheduling blocks
+            memory: "2Gi"    # Lowered from 4Gi to fit OrbStack's local profile
+          limits:
+            cpu: "2"
+            memory: "3Gi"
