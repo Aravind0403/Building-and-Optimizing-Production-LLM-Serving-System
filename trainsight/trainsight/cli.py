@@ -1,0 +1,143 @@
+from pathlib import Path
+from typing import Optional
+import typer
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+from rich.text import Text
+
+from trainsight.inspectors.sft_inspector import SFTInspector
+from trainsight.inspectors.dpo_inspector import DPOInspector
+
+app = typer.Typer(
+    name="trainsight",
+    help="Pre-training and post-training dataset validator CLI",
+    add_completion=False,
+    no_args_is_help=True,
+)
+console = Console()
+
+
+@app.command("version")
+def version():
+    """Print trainsight CLI version."""
+    console.print("[bold cyan]trainsight v0.1.0[/bold cyan]")
+
+
+@app.command("profile")
+def profile(
+    dataset: Path = typer.Option(
+        ...,
+        "--dataset",
+        "-d",
+        help="Path to JSONL dataset file",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+    ),
+    dataset_type: str = typer.Option(
+        "sft",
+        "--type",
+        "-t",
+        help="Dataset type: sft, dpo, or rl",
+    ),
+    max_seq_len: int = typer.Option(
+        2048,
+        "--max-seq-len",
+        "-m",
+        help="Maximum target sequence length for OOM risk assessment",
+    ),
+    strict: bool = typer.Option(
+        False,
+        "--strict",
+        help="Exit with error code 1 if any warnings are found (ideal for K8s InitContainers / CI)",
+    ),
+):
+    """Profile dataset quality, token distributions, and failure risks before training."""
+
+    console.print()
+    console.print(
+        Panel(
+            Text(f"🔍 Profiling dataset: {dataset.name}\nType: {dataset_type.upper()} | Max Target Length: {max_seq_len} tokens", style="bold cyan"),
+            title="[bold white]trainsight validator[/bold white]",
+            border_style="cyan",
+        )
+    )
+
+    if dataset_type.lower() == "sft":
+        inspector = SFTInspector(max_seq_len_threshold=max_seq_len)
+        report = inspector.inspect_file(dataset)
+
+        table = Table(title="📊 SFT Dataset Metrics Summary", border_style="dim")
+        table.add_column("Metric", style="cyan", no_wrap=True)
+        table.add_column("Value", style="bold white")
+        table.add_column("Status", style="bold")
+
+        table.add_row("Total Samples", str(report.total_samples), "✅ OK")
+        table.add_row("Avg Sequence Length", f"{report.avg_seq_len:.1f} tokens", "ℹ️ Info")
+        table.add_row("Std Dev Length", f"{report.std_seq_len:.1f} tokens", "⚠️ High Variance" if report.std_seq_len > report.avg_seq_len * 0.75 else "✅ Normal")
+        table.add_row("P95 Sequence Length", f"{report.p95_seq_len:.1f} tokens", "ℹ️ Info")
+        table.add_row("Max Sequence Length", f"{report.max_seq_len} tokens", "❌ Too Long" if report.max_seq_len > max_seq_len else "✅ OK")
+        table.add_row("OOM Risk Samples (>2048)", str(report.oom_risk_count), "❌ High Risk" if report.oom_risk_count > 0 else "✅ None")
+        table.add_row("Duplicate Prompts", str(report.duplicate_count), "⚠️ Duplicates" if report.duplicate_count > 0 else "✅ Clean")
+        table.add_row("Empty Completions", str(report.empty_completion_count), "❌ Corrupt" if report.empty_completion_count > 0 else "✅ Clean")
+
+        console.print(table)
+        console.print()
+
+        if report.warnings:
+            console.print(Panel("\n".join(report.warnings), title="[bold yellow]⚠️ Detected Issues[/bold yellow]", border_style="yellow"))
+            console.print()
+
+        if report.recommendations:
+            console.print(Panel("\n".join([f"• {r}" for r in report.recommendations]), title="[bold green]💡 Actionable Recommendations[/bold green]", border_style="green"))
+            console.print()
+
+        if not report.warnings:
+            console.print("[bold green]✨ SFT Dataset passed all validation checks![/bold green]\n")
+
+        if strict and report.warnings:
+            raise typer.Exit(code=1)
+
+    elif dataset_type.lower() == "dpo":
+        inspector = DPOInspector()
+        report = inspector.inspect_file(dataset)
+
+        table = Table(title="📊 DPO Preference Metrics Summary", border_style="dim")
+        table.add_column("Metric", style="cyan", no_wrap=True)
+        table.add_column("Value", style="bold white")
+        table.add_column("Status", style="bold")
+
+        table.add_row("Total Preference Pairs", str(report.total_samples), "✅ OK")
+        table.add_row("Avg Chosen Length", f"{report.avg_chosen_len:.1f} tokens", "ℹ️ Info")
+        table.add_row("Avg Rejected Length", f"{report.avg_rejected_len:.1f} tokens", "ℹ️ Info")
+        table.add_row("Length Bias Ratio (Chosen/Rejected)", f"{report.length_bias_ratio:.2f}", "⚠️ High Bias" if report.length_bias_ratio > 1.8 or report.length_bias_ratio < 0.55 else "✅ Balanced")
+        table.add_row("Identical Pairs (Chosen == Rejected)", str(report.identical_pairs_count), "❌ Zero Gradient" if report.identical_pairs_count > 0 else "✅ None")
+        table.add_row("Near-Identical Pairs (Sim > 90%)", str(report.near_identical_count), "⚠️ Low Margin" if report.near_identical_count > 0 else "✅ None")
+        table.add_row("Duplicate Prompts", str(report.duplicate_count), "⚠️ Duplicates" if report.duplicate_count > 0 else "✅ Clean")
+        table.add_row("Missing Text Rows", str(report.empty_pair_count), "❌ Corrupt" if report.empty_pair_count > 0 else "✅ Clean")
+
+        console.print(table)
+        console.print()
+
+        if report.warnings:
+            console.print(Panel("\n".join(report.warnings), title="[bold yellow]⚠️ Detected Issues[/bold yellow]", border_style="yellow"))
+            console.print()
+
+        if report.recommendations:
+            console.print(Panel("\n".join([f"• {r}" for r in report.recommendations]), title="[bold green]💡 Actionable Recommendations[/bold green]", border_style="green"))
+            console.print()
+
+        if not report.warnings:
+            console.print("[bold green]✨ DPO Dataset passed all validation checks![/bold green]\n")
+
+        if strict and report.warnings:
+            raise typer.Exit(code=1)
+
+    else:
+        console.print(f"[bold red]Dataset type '{dataset_type}' inspector coming up next![/bold red]")
+
+
+if __name__ == "__main__":
+    app()

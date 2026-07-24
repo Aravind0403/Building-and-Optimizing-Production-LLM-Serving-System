@@ -1,0 +1,2 @@
+[console_scripts]
+rlhf-train = rlhf_pipeline.cli:app

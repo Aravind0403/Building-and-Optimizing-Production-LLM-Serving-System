@@ -1,0 +1,5 @@
+{"prompt": "What is Python?", "completion": "Python is a high-level programming language."}
+{"prompt": "Explain gradient descent.", "completion": "Gradient descent is an optimization algorithm used to minimize loss functions."}
+{"prompt": "What is Python?", "completion": "Python is a high-level programming language."}
+{"prompt": "Write a short poem about code.", "completion": ""}
+{"prompt": "Generate a long context file.", "completion": "This is a super long repetitive context line to trigger sequence length variance and OOM risk detection. Python LLM inference serving platform vLLM continuous batching PagedAttention CUDA kernel execution Nsight Systems trace analysis. " }

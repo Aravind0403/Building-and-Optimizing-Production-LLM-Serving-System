@@ -1,14 +1,47 @@
-# Project Title Options
+# AetherControl: Production-Grade LLM Serving, Control Plane & Post-Training Pipeline
 
-**Primary Title:**
-# Production-Grade LLM Inference Platform: From Deployment to GPU-Level Optimization
-
-# Project Synopsis
-
-This project is a systematic engineering exploration of modern LLM inference infrastructure, built as a living, evolving platform that progresses from production deployment to GPU-level performance analysis. Over a structured development lifecycle, the platform transforms from a basic Kubernetes deployment into a fully instrumented, profiled, and optimized serving system capable of handling distributed inference at scale.
-
-The project follows a rigorous engineering methodology: every feature is deployed, measured, profiled, and documented with empirical evidence. Rather than simply implementing theoretical concepts, the focus is on understanding production trade-offs through controlled experiments—benchmarking continuous batching efficiency, quantifying prefix caching improvements, profiling GPU bottlenecks with Nsight Systems, and evaluating tensor-parallel scaling across multiple GPUs.
-
-The outcome is a comprehensive portfolio demonstrating a deep understanding of LLM serving systems. It bridges the gap between high-level cluster orchestration and low-level hardware execution, covering vLLM/SGLang internals (scheduler, KV cache lifecycle, PagedAttention), GPU architecture (memory hierarchy, compute vs. memory-bound phases, FlashAttention), and distributed inference (tensor parallelism, NCCL collectives, quantization trade-offs). Each phase produces production-ready code, performance benchmarks, profiling traces, and detailed technical documentation.
+**AetherControl** is a unified, deterministic engineering control plane that bridges raw GPU hardware execution realities (GPUs, NUMA, NVLink, memory bandwidth) with post-training developer pipelines (data validation, RLHF/GRPO, serving engines).
 
 ---
+
+## 🏛️ Architecture Overview
+
+```
+                                [ AETHERCONTROL ]
+                                        |
+        +-------------------------------+-------------------------------+
+        |                               |                               |
+        v                               v                               v
+ [ Data Validation ]          [ Cluster Topology ]          [ vLLM Serving & Benchmarks ]
+    "trainsight"               "K8s + Prometheus"             "vLLM Production Engine"
+  • CLI (Typer/Rich)           • Helm / K8s Manifests       • OpenAI-Compatible API
+  • K8s InitContainer          • Prometheus + Grafana         • PagedAttention & Chunked Prefill
+  • Prevents bad data            Metrics (TTFT, TPOT,         • Standard Benchmarking Suite
+    from wasting GPU.            KV-Cache Occupancy)            (Load Testing, RPS, Latency SLAs)
+```
+
+---
+
+## 📂 Project Modules
+
+* **`trainsight/`**: Pre-training & post-training data validation CLI & Kubernetes InitContainer.
+* **`k8s-infra/`**: Kubernetes manifests, Helm charts, and Grafana observability stack for vLLM serving.
+* **`vllm-engine/`**: Production vLLM engine configuration, routing/load balancing scripts, and standard latency/throughput benchmarking suite.
+* **`rlhf-pipeline/`**: GRPO (Group Relative Policy Optimization) fine-tuning pipeline on Qwen2.5 (1.5B/7B) with MATH/GSM8K.
+* **`docs/`**: Performance reports, SLA benchmarks, and production dossier.
+
+---
+
+## 🚀 Quick Start (Local Setup)
+
+### 1. `trainsight` CLI
+```bash
+cd trainsight
+pip install -e .
+trainsight --help
+```
+
+---
+
+## 📜 License
+MIT

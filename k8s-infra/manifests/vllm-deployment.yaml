@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-inference-server
+  namespace: default
+  labels:
+    app.kubernetes.io/name: vllm-server
+    app.kubernetes.io/component: inference-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-server
+  template:
+    metadata:
+      labels:
+        app: vllm-server
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Node affinity & tolerations for GKE GPU Node Pool (NVIDIA L4 / A100)
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+
+      # Pre-flight data validation using TrainSight before model container launches
+      initContainers:
+        - name: trainsight-data-validator
+          image: trainsight:v0.1.0
+          imagePullPolicy: IfNotPresent
+          command: ["trainsight", "profile"]
+          args:
+            - "--dataset"
+            - "/data/sft_dataset.jsonl"
+            - "--type"
+            - "sft"
+            - "--strict"
+          volumeMounts:
+            - name: model-data-volume
+              mountPath: /data
+
+      containers:
+        - name: vllm-container
+          image: vllm/vllm-openai:v0.6.0
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+          args:
+            - "--model"
+            - "Qwen/Qwen2.5-1.5B-Instruct"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "8000"
+            - "--gpu-memory-utilization"
+            - "0.90"
+            - "--max-model-len"
+            - "4096"
+            - "--block-size"
+            - "16"
+            - "--max-num-seqs"
+            - "256"
+            - "--enable-chunked-prefill"
+            - "True"
+            - "--max-num-batched-tokens"
+            - "2048"
+            - "--enable-prefix-caching"
+          ports:
+            - name: http
+              containerPort: 8000
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+              memory: 16Gi
+              cpu: "4"
+            requests:
+              nvidia.com/gpu: "1"
+              memory: 8Gi
+              cpu: "2"
+          
+          # Health & Readiness Probes for Zero-Downtime Serving
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 45
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 90
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 5
+
+          volumeMounts:
+            - name: model-data-volume
+              mountPath: /data
+
+      volumes:
+        - name: model-data-volume
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-service
+  namespace: default
+  labels:
+    app: vllm-server
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+  selector:
+    app: vllm-server

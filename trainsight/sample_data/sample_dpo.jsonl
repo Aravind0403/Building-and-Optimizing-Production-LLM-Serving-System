@@ -1,0 +1,3 @@
+{"prompt": "Write a python function to add two numbers.", "chosen": "def add(a, b):\n    return a + b", "rejected": "def add(a, b):\n    return a + b"}
+{"prompt": "What is the capital of France?", "chosen": "The capital of France is Paris. It is a major European city and a global center for art, fashion, gastronomy and culture.", "rejected": "Paris."}
+{"prompt": "Explain machine learning.", "chosen": "Machine learning is a subset of AI focused on building systems that learn from data.", "rejected": "Machine learning is a field of artificial intelligence centered on developing systems that learn from data."}

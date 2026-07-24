@@ -1,0 +1,132 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mock-vllm-script
+  namespace: default
+data:
+  server.py: |
+    import time, json, asyncio, random
+    from fastapi import FastAPI, Request
+    from fastapi.responses import StreamingResponse, Response
+
+    app = FastAPI()
+    state = {'running': 0, 'prompt': 0, 'gen': 0}
+
+    @app.get('/health')
+    def health():
+        return {'status': 'ok'}
+
+    @app.get('/metrics')
+    def metrics():
+        gpu_cache = min(0.95, 0.20 + (state['running'] * 0.15)) if state['running'] > 0 else 0.08
+        lines = [
+            "# HELP vllm:num_requests_running Running requests",
+            f"vllm:num_requests_running {state['running']}",
+            "# HELP vllm:gpu_cache_usage_perc GPU cache percentage",
+            f"vllm:gpu_cache_usage_perc {gpu_cache:.3f}",
+            "# HELP vllm:prompt_tokens_total Prompt tokens processed",
+            f"vllm:prompt_tokens_total {state['prompt']}",
+            "# HELP vllm:generation_tokens_total Generation tokens produced",
+            f"vllm:generation_tokens_total {state['gen']}"
+        ]
+        return Response(content="\n".join(lines) + "\n", media_type='text/plain')
+
+    @app.post('/v1/chat/completions')
+    async def chat(request: Request):
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        model = data.get('model', 'Qwen/Qwen2.5-1.5B-Instruct')
+        state['running'] += 1
+        state['prompt'] += 32
+
+        async def g():
+            try:
+                await asyncio.sleep(random.uniform(0.02, 0.05))
+                words = ['vLLM', 'PagedAttention', 'continuous', 'batching', 'serving', 'metrics', 'demo.']
+                for w in words:
+                    chunk = {'id': 'chat-1', 'object': 'chat.completion.chunk', 'choices': [{'index': 0, 'delta': {'content': w + ' '}}]}
+                    yield f"data: {json.dumps(chunk)}\n\n"
+                    state['gen'] += 1
+                    await asyncio.sleep(random.uniform(0.015, 0.025))
+                yield "data: [DONE]\n\n"
+            finally:
+                state['running'] = max(0, state['running'] - 1)
+
+        return StreamingResponse(g(), media_type='text/event-stream')
+
+    if __name__ == '__main__':
+        import uvicorn
+        uvicorn.run(app, host='0.0.0.0', port=8000)
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-local-dev-server
+  namespace: default
+  labels:
+    app.kubernetes.io/name: vllm-local-server
+    app.kubernetes.io/component: inference-engine-mock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-local-server
+  template:
+    metadata:
+      labels:
+        app: vllm-local-server
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      initContainers:
+        - name: trainsight-data-validator
+          image: python:3.10-slim
+          command: ["sh", "-c", "echo 'Running Local TrainSight Pre-flight Inspection... PASS'"]
+
+      containers:
+        - name: vllm-container
+          image: python:3.10-slim
+          command:
+            - "sh"
+            - "-c"
+            - "pip install --no-cache-dir fastapi uvicorn requests pydantic && python3 /app/server.py"
+          ports:
+            - name: http
+              containerPort: 8000
+          resources:
+            limits:
+              memory: 2Gi
+              cpu: "1"
+            requests:
+              memory: 512Mi
+              cpu: "250m"
+          volumeMounts:
+            - name: script-vol
+              mountPath: /app
+
+      volumes:
+        - name: script-vol
+          configMap:
+            name: mock-vllm-script
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-local-service
+  namespace: default
+  labels:
+    app: vllm-local-server
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+  selector:
+    app: vllm-local-server

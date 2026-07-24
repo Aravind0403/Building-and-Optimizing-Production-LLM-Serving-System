@@ -1,0 +1,28 @@
+Metadata-Version: 2.4
+Name: trainsight
+Version: 0.1.0
+Summary: Pre-training and post-training data validation CLI for LLM workloads
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: typer[all]>=0.9.0
+Requires-Dist: rich>=13.0.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: numpy>=1.24.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4.0; extra == "dev"
+
+# trainsight (The Validator)
+
+`trainsight` is a pre-training and post-training data validation CLI that catches data corruptions, sequence length anomalies, label inconsistencies, and preference margin collapses before launching expensive GPU training runs.
+
+---
+
+## 💻 Usage
+
+```bash
+# Profile an SFT dataset
+trainsight profile --dataset data/sft_data.jsonl --type sft
+
+# Profile a DPO / Preference dataset
+trainsight profile --dataset data/dpo_data.jsonl --type dpo
+```

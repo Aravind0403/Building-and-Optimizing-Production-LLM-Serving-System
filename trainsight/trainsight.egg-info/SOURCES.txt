@@ -1,0 +1,13 @@
+README.md
+pyproject.toml
+tests/test_sft_inspector.py
+trainsight/__init__.py
+trainsight/cli.py
+trainsight.egg-info/PKG-INFO
+trainsight.egg-info/SOURCES.txt
+trainsight.egg-info/dependency_links.txt
+trainsight.egg-info/entry_points.txt
+trainsight.egg-info/requires.txt
+trainsight.egg-info/top_level.txt
+trainsight/inspectors/__init__.py
+trainsight/inspectors/sft_inspector.py

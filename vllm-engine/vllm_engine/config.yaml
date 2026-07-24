@@ -1,0 +1,23 @@
+# Production vLLM Engine Configuration Token & Memory Tuning
+# Model: Qwen2.5-1.5B-Instruct / Llama-3.1-8B-Instruct
+
+model: "Qwen/Qwen2.5-1.5B-Instruct"
+host: "0.0.0.0"
+port: 8000
+
+# GPU Memory Footprint Tuning
+gpu_memory_utilization: 0.90   # Reserve 90% GPU VRAM for model weights + KV-Cache (10% CUDA headroom)
+max_model_len: 4096            # Maximum allowed context length (prompt + output)
+
+# Continuous Batching & PagedAttention Configuration
+block_size: 16                 # Tokens per physical KV-Cache block (PagedAttention block granularity)
+max_num_seqs: 256              # Max active sequences processed per continuous batch iteration
+
+# Throughput & Latency Optimization Flags
+enable_chunked_prefill: true   # Chunk long prompt prefills to prevent decode latency spikes (TPOT)
+max_num_batched_tokens: 2048   # Max prompt tokens chunked per prefill iteration
+enable_prefix_caching: true    # Cache identical prompt prefix KV-blocks (Radix Tree caching)
+
+# Pipeline & Parallelism (for Multi-GPU clusters)
+tensor_parallel_size: 1        # Number of GPUs for intra-node Tensor Parallelism
+pipeline_parallel_size: 1      # Number of GPUs for Pipeline Parallelism
