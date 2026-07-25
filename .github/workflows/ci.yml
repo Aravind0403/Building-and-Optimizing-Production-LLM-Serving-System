@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Run Python Test Suites
+    name: Run Python Test Suites & Pre-flight Dataset Inspection
     runs-on: ubuntu-latest
 
     steps:
@@ -25,11 +25,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest numpy pydantic pyyaml typer rich requests
 
-      - name: Test trainsight
+      - name: Test & Validate trainsight (Shift-Left Pre-Flight Check)
         run: |
           cd trainsight
           pip install -e .
           pytest
+          # Shift-Left CI validation: Fail CI build if dataset quality checks fail (--strict)
+          trainsight profile --dataset sample_data/sample_sft.jsonl --type sft --strict
+          trainsight profile --dataset sample_data/sample_dpo.jsonl --type dpo --strict
+          trainsight profile --dataset sample_data/sample_gsm8k.jsonl --type sft --strict
 
       - name: Test vllm-engine
         run: |
