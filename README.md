@@ -89,13 +89,13 @@ TrainSight standardizes and validates datasets directly streamed from HuggingFac
 
 ## 🔗 HuggingFace Ecosystem
 
-All artifacts from this project are published to the HuggingFace Hub for reproducibility and interactive exploration:
+All artifacts from this project are published to the HuggingFace Hub for open-source reproducibility:
 
 | Artifact | Link | Purpose |
 | :--- | :--- | :--- |
-| 🧠 **Fine-Tuned Model** | [AetherControl-Qwen2.5-1.5B-GRPO-Math](https://huggingface.co/Aravind0403/AetherControl-Qwen2.5-1.5B-GRPO-Math) | GRPO-aligned math reasoning model |
-| 📦 **Sanitized Dataset** | [AetherControl-GSM8K-Sanitized](https://huggingface.co/datasets/Aravind0403/AetherControl-GSM8K-Sanitized) | TrainSight-validated GSM8K subset |
-| 🚀 **Interactive Demo** | [AetherControl-Benchmark-UI](https://huggingface.co/spaces/Aravind0403/AetherControl-Benchmark-UI) | Live Gradio Space with validation, inference, and telemetry |
+| 🧠 **Fine-Tuned Model** | [AetherControl-Qwen2.5-1.5B-GRPO-Math](https://huggingface.co/Aravind0495/AetherControl-Qwen2.5-1.5B-GRPO-Math) | GRPO-aligned math reasoning model & training card |
+| 📦 **Sanitized Dataset** | [AetherControl-GSM8K-Sanitized](https://huggingface.co/datasets/Aravind0495/AetherControl-GSM8K-Sanitized) | TrainSight-validated GSM8K subset (1,000 rows) |
+| 🚀 **Local Interactive Demo** | [space/app.py](file:///Users/aravindsundaresan/Development/LLM_Serving_Platform/space/app.py) | Local Gradio App for data validation, SLA inference, and GRPO telemetry |
 
 ---
 
