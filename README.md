@@ -32,7 +32,7 @@
 
 | Module | Location | Primary Command | Key Production Feature | Unit Tests |
 | :--- | :--- | :--- | :--- | :--- |
-| **`trainsight`** | `trainsight/` | `trainsight profile` | Pre-flight dataset linter & Kubernetes InitContainer guard. Detects CUDA OOM risks ($>2048$ tokens), sequence length variance ($\sigma > 0.75\mu$), and empty completions. | ✅ 4/4 Passed |
+| **`trainsight`** | `trainsight/` | `trainsight profile` | Pre-flight dataset linter & Kubernetes InitContainer guard. Detects CUDA OOM risks (`> 2048` tokens), sequence length variance ($\sigma > 0.75\mu$), and empty completions. | ✅ 4/4 Passed |
 | **`vllm-engine`** | `vllm-engine/` | `vllm-bench benchmark` | Production engine config manager & SLA streaming benchmark generator ($P_{50}/P_{99}$ TTFT, TPOT, RPS). Tunes Chunked Prefill, PagedAttention, and Prefix Caching. | ✅ 3/3 Passed |
 | **`k8s-infra`** | `k8s-infra/` | `make cloud-up` | Production GKE Spot GPU cluster manifests, Kubernetes Secrets (`secrets.yaml`), KEDA autoscaling (`keda-autoscaler.yaml`), DCGM exporter (`dcgm-exporter.yaml`), and Prometheus/Grafana stack. | ✅ Verified Live |
 | **`rlhf-pipeline`** | `rlhf-pipeline/` | `rlhf-train train-steps` | DeepSeek-R1 style Group Relative Policy Optimization (GRPO) training pipeline using HuggingFace `trl.GRPOTrainer`, DeepSpeed ZeRO-3, and rule-based verifier rewards. | ✅ 7/7 Passed |
@@ -131,7 +131,7 @@ make cloud-down
 * **Decision:** We adopted **Group Relative Policy Optimization (GRPO)** (DeepSeek R1 architecture). By sampling a group of $G$ completions per prompt and calculating relative advantage $A_i = (r_i - \mu) / (\sigma + \epsilon)$, GRPO eliminates the Critic network entirely, reducing VRAM utilization by 50% and doubling batch throughput.
 
 ### ADR-002: Selection of vLLM PagedAttention over TGI
-* **Context:** Standard LLM serving allocates contiguous VRAM for maximum sequence lengths ($4096+$ tokens), causing 60–80% internal memory fragmentation.
+* **Context:** Standard LLM serving allocates contiguous VRAM for maximum sequence lengths (`4096+` tokens), causing 60–80% internal memory fragmentation.
 * **Decision:** We deployed **vLLM with PagedAttention**. PagedAttention allocates physical KV-cache memory blocks dynamically like OS virtual memory paging, eliminating memory fragmentation and increasing concurrent sequence capacity by up to 4x.
 
 ---
@@ -148,7 +148,7 @@ make cloud-down
 
 * **Data Engineering & Safety:** Engineered a pre-flight data validation InitContainer (`trainsight`), reducing wasted GPU compute hours by catching schema drift, empty completions, and sequence-length anomalies prior to Kubernetes pod scheduling.
 * **Post-Training Alignment:** Architected an end-to-end GRPO RLHF pipeline with a no-critic relative advantage engine using HuggingFace `trl.GRPOTrainer`, optimizing VRAM utilization by 50% through Critic network elimination while maintaining mathematical verifier accuracy.
-* **Serving & Observability:** Deployed and tuned a vLLM inference engine on GKE, utilizing Chunked Prefill and PagedAttention to achieve sub-100ms $P_{99}$ TTFT under concurrent load, instrumenting custom Prometheus/Grafana dashboards for TTFT, TPOT, and KV-cache block occupancy telemetry.
+* **Serving & Observability:** Deployed and tuned a vLLM inference engine on GKE, utilizing Chunked Prefill and PagedAttention to achieve sub-50ms $P_{99}$ TPOT (Decode Latency) under concurrent load, instrumenting custom Prometheus/Grafana dashboards for TTFT, TPOT, and KV-cache block occupancy telemetry.
 * **Systems Profiling & Fault Tolerance:** Conducted GPU hardware profiling (NVIDIA Nsight Systems `nsys`, Roofline model) and executed 5 structured failure experiments (Head-of-Line blocking, KV-cache starvation, CPU swapping), isolating execution bottlenecks and establishing production SLAs.
 
 ---
