@@ -182,29 +182,29 @@ if __name__ == "__main__":
 
 ---
 
-## 5. Publishing Workflow (`huggingface-cli` Commands)
+## 5. Publishing Workflow (`hf` CLI Commands)
 
-To publish all three artifacts to HuggingFace Hub:
+To publish all three artifacts to HuggingFace Hub using the new `hf` CLI:
 
 ```bash
 # ─── Step 1: Authenticate ─────────────────────────────────────────
-huggingface-cli login
+hf auth login
 
 # ─── Step 2: Create Repositories ───────────────────────────────────
-huggingface-cli repo create AetherControl-Qwen2.5-1.5B-GRPO-Math --type model
-huggingface-cli repo create AetherControl-GSM8K-Sanitized --type dataset
-huggingface-cli repo create AetherControl-Benchmark-UI --type space
+hf repos create AetherControl-Qwen2.5-1.5B-GRPO-Math --type model
+hf repos create AetherControl-GSM8K-Sanitized --type dataset
+hf repos create AetherControl-Benchmark-UI --type space --space-sdk gradio
 
 # ─── Step 3: Upload Model Weights & Card ──────────────────────────
-huggingface-cli upload Aravind0403/AetherControl-Qwen2.5-1.5B-GRPO-Math \
+hf upload Aravind0403/AetherControl-Qwen2.5-1.5B-GRPO-Math \
   ./model_output/ "."
 
 # ─── Step 4: Upload Sanitized Dataset ──────────────────────────────
-huggingface-cli upload Aravind0403/AetherControl-GSM8K-Sanitized \
+hf upload Aravind0403/AetherControl-GSM8K-Sanitized \
   ./trainsight/sample_data/real_gsm8k_1000.jsonl "gsm8k_sanitized.jsonl"
 
 # ─── Step 5: Upload Interactive Space ──────────────────────────────
-huggingface-cli upload Aravind0403/AetherControl-Benchmark-UI \
+hf upload Aravind0403/AetherControl-Benchmark-UI \
   ./space/ "."
 ```
 
