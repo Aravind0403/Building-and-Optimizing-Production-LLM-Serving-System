@@ -87,6 +87,18 @@ TrainSight standardizes and validates datasets directly streamed from HuggingFac
 
 ---
 
+## 🔗 HuggingFace Ecosystem
+
+All artifacts from this project are published to the HuggingFace Hub for reproducibility and interactive exploration:
+
+| Artifact | Link | Purpose |
+| :--- | :--- | :--- |
+| 🧠 **Fine-Tuned Model** | [AetherControl-Qwen2.5-1.5B-GRPO-Math](https://huggingface.co/Aravind0403/AetherControl-Qwen2.5-1.5B-GRPO-Math) | GRPO-aligned math reasoning model |
+| 📦 **Sanitized Dataset** | [AetherControl-GSM8K-Sanitized](https://huggingface.co/datasets/Aravind0403/AetherControl-GSM8K-Sanitized) | TrainSight-validated GSM8K subset |
+| 🚀 **Interactive Demo** | [AetherControl-Benchmark-UI](https://huggingface.co/spaces/Aravind0403/AetherControl-Benchmark-UI) | Live Gradio Space with validation, inference, and telemetry |
+
+---
+
 ## 🚀 Quickstart & One-Command Execution
 
 ```bash
