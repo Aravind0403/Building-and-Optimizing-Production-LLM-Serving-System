@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nvidia-dcgm-exporter
+  namespace: default
+  labels:
+    app.kubernetes.io/name: nvidia-dcgm-exporter
+spec:
+  selector:
+    matchLabels:
+      app: nvidia-dcgm-exporter
+  template:
+    metadata:
+      labels:
+        app: nvidia-dcgm-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9400"
+        prometheus.io/path: "/metrics"
+    spec:
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: nvidia-dcgm-exporter
+          image: nvcr.io/nvidia/k8s/dcgm-exporter:3.2.5-3.1.7-ubuntu22.04
+          ports:
+            - name: metrics
+              containerPort: 9400
+          securityContext:
+            runAsNonRoot: false
+            capabilities:
+              add: ["SYS_ADMIN"]
+          resources:
+            limits:
+              memory: 256Mi
+              cpu: 200m
+            requests:
+              memory: 128Mi
+              cpu: 100m

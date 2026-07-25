@@ -1,4 +1,4 @@
-.PHONY: all test profile k8s-dev clean
+.PHONY: all test profile k8s-dev cloud-up cloud-down clean
 
 all: test profile
 
@@ -21,6 +21,16 @@ k8s-dev:
 	kubectl apply -f k8s-infra/manifests/local-dev-deployment.yaml
 	kubectl apply -f k8s-infra/manifests/prometheus-grafana.yaml
 	@echo "✨ Kubernetes manifests applied successfully!"
+
+cloud-up:
+	@echo "🚀 Provisioning GCP Spot GPU GKE Cluster, GCS Bucket, and Artifact Registry..."
+	(cd terraform && terraform init && terraform apply -auto-approve)
+	@echo "✨ GCP Cloud Micro-Run Cluster Provisioned!"
+
+cloud-down:
+	@echo "🧹 Destroying GCP GKE Cluster and Cloud Resources (Zero Idle Billing)..."
+	(cd terraform && terraform destroy -auto-approve)
+	@echo "✨ GCP Infrastructure Teardown Complete!"
 
 clean:
 	@echo "🧹 Cleaning up local cluster and background processes..."
