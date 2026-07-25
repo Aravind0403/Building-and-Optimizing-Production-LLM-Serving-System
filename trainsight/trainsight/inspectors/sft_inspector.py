@@ -72,9 +72,9 @@ class SFTInspector:
         oom_risk = 0
 
         for sample in samples:
-            # Handle standard keys: 'prompt'/'completion', 'instruction'/'output', or 'messages'
-            prompt_text = sample.get("prompt") or sample.get("instruction") or ""
-            completion_text = sample.get("completion") or sample.get("output") or sample.get("response") or ""
+            # Handle standard keys: 'prompt'/'completion', 'instruction'/'output', 'question'/'answer', or 'messages'
+            prompt_text = sample.get("prompt") or sample.get("instruction") or sample.get("question") or ""
+            completion_text = sample.get("completion") or sample.get("output") or sample.get("response") or sample.get("answer") or ""
 
             if isinstance(sample.get("messages"), list):
                 full_text = " ".join([m.get("content", "") for m in sample["messages"]])

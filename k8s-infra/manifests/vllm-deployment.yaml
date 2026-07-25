@@ -72,6 +72,9 @@ spec:
           ports:
             - name: http
               containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: aethercontrol-secrets
           resources:
             limits:
               nvidia.com/gpu: "1"

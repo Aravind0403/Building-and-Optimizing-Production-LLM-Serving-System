@@ -43,6 +43,16 @@ In production LLM post-training pipelines, TrainSight standardizes and validates
 }
 ```
 
+### D. Supported Industry Production Datasets
+
+| Dataset | Use Case | Size | Source |
+| :--- | :--- | :--- | :--- |
+| **GSM8K** | Math reasoning for GRPO training | 8.5K train / 1K test | `openai/gsm8k` |
+| **MATH** | Competition math problems | 7.5K train / 5K test | `hendrycks/competition_math` |
+| **OpenMathInstruct-2** | Synthetic math instruction data | 14M pairs | `nvidia/OpenMathInstruct-2` |
+| **UltraFeedback** | RLHF preference data | 340K pairs | `openbmb/UltraFeedback` |
+| **The Stack v2** | Code data for format validation | 1TB+ deduped | `bigcode/the-stack-v2` |
+
 ---
 
 ## 3. Real-Time Ingestion Architecture
