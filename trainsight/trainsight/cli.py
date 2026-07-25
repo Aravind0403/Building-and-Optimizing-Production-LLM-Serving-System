@@ -139,5 +139,47 @@ def profile(
         console.print(f"[bold red]Dataset type '{dataset_type}' inspector coming up next![/bold red]")
 
 
+@app.command("fetch")
+def fetch(
+    dataset_name: str = typer.Option(
+        "openai/gsm8k",
+        "--repo",
+        "-r",
+        help="HuggingFace dataset repo (e.g. openai/gsm8k, openbmb/UltraFeedback)",
+    ),
+    split: str = typer.Option(
+        "train[:1000]",
+        "--split",
+        "-s",
+        help="Dataset split selection (e.g. train[:1000])",
+    ),
+    output: Path = typer.Option(
+        Path("sample_data/fetched_dataset.jsonl"),
+        "--output",
+        "-o",
+        help="Output destination path",
+    ),
+):
+    """Fetch real production datasets directly from HuggingFace Hub for inspection."""
+    try:
+        from datasets import load_dataset
+    except ImportError:
+        console.print("[bold red]datasets library not installed. Install with: pip install datasets[/bold red]")
+        raise typer.Exit(code=1)
+
+    console.print(f"📥 Fetching dataset [bold cyan]{dataset_name}[/bold cyan] ({split}) from HuggingFace Hub...")
+    ds = load_dataset(dataset_name, "main" if "gsm8k" in dataset_name else None, split=split)
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    count = 0
+    import json
+    with open(output, "w", encoding="utf-8") as f:
+        for row in ds:
+            f.write(json.dumps(row) + "\n")
+            count += 1
+
+    console.print(f"[bold green]✨ Successfully downloaded {count} real rows to {output}[/bold green]\n")
+
+
 if __name__ == "__main__":
     app()
