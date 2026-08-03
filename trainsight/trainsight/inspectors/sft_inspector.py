@@ -23,13 +23,26 @@ class SFTReport(BaseModel):
 class SFTInspector:
     """Inspector for Supervised Fine-Tuning (SFT) datasets."""
 
-    def __init__(self, max_seq_len_threshold: int = 2048):
+    def __init__(self, max_seq_len_threshold: int = 2048, tokenizer_name: Optional[str] = None):
         self.max_seq_len_threshold = max_seq_len_threshold
+        self.tokenizer_name = tokenizer_name
+        self.tokenizer = None
+        if tokenizer_name:
+            try:
+                from transformers import AutoTokenizer
+                self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+            except Exception:
+                self.tokenizer = None
 
     def _estimate_token_count(self, text: str) -> int:
-        """Fast heuristic token counter (~4 chars per token)."""
+        """Fast heuristic token counter (~4 chars per token) or model-aligned BPE tokenizer."""
         if not text:
             return 0
+        if self.tokenizer:
+            try:
+                return len(self.tokenizer.encode(text, truncation=False))
+            except Exception:
+                pass
         return max(1, len(text.strip()) // 4)
 
     def inspect_file(self, file_path: Path) -> SFTReport:

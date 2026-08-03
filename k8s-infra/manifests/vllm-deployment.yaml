@@ -20,6 +20,7 @@ spec:
         prometheus.io/port: "8000"
         prometheus.io/path: "/metrics"
     spec:
+      terminationGracePeriodSeconds: 30
       # Node affinity & tolerations for GKE GPU Node Pool (NVIDIA L4 / A100)
       nodeSelector:
         cloud.google.com/gke-accelerator: nvidia-l4

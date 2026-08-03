@@ -12,18 +12,47 @@
 
 ## 🏛️ System Architecture
 
+```mermaid
+flowchart TD
+    subgraph Data["1. Data Engineering & Pre-Flight Guard"]
+        A[Raw JSONL / Parquet Dataset] --> B["trainsight Profile Engine"]
+        B -->|Exit Code 1 if corrupt| C{Validation Pass?}
+        C -->|Failed: σ/μ > 0.75 or OOM Risk| D[Abort K8s Pod Boot]
+        C -->|Passed: < 50ms| E[Sanitized Dataset Snapshot]
+    end
+
+    subgraph Alignment["2. Post-Training & Reinforcement Learning"]
+        E --> F["DeepSeek-R1 GRPO Alignment Engine"]
+        F --> G[Rule-Based Verifiers: Format + Accuracy]
+        G --> H[Group Relative Advantage Calculation]
+        H --> I[Fine-Tuned Model Checkpoint]
+    end
+
+    subgraph Serving["3. High-Performance Inference Engine"]
+        I --> J["vLLM Engine (PagedAttention)"]
+        J --> K[Chunked Prefill: 2048 Tokens]
+        J --> L[Radix Tree Prefix Caching]
+        J --> M["vllm-bench SLA Metrics: TTFT / TPOT"]
+    end
+
+    subgraph Infra["4. Cloud Infrastructure & Auto-Scaling"]
+        M --> N["GKE Spot GPU Node Cluster"]
+        N --> O["NVIDIA DCGM Exporter (VRAM & Thermal Metrics)"]
+        N --> P["KEDA Event-Driven Autoscaler (Queue Depth > 5)"]
+        P -->|Scale Up / Down| N
+    end
 ```
-                                [ AETHERCONTROL ]
-                                        │
-        +-------------------------------+-------------------------------+
-        |                               |                               |
-        v                               v                               v
- [ Data Validation ]          [ Cluster Topology ]          [ Post-Training RLHF ]
-    "trainsight"               "K8s + Prometheus"             "GRPO Pipeline"
-  • CLI (Typer/Rich)           • Production GKE Manifests     • HuggingFace TRL Trainer
-  • K8s InitContainer          • Prometheus & Grafana         • Format & Verifier Rewards
-  • Fail-Fast Exit (code=1)      Metrics (TTFT, TPOT,         • No-Critic Advantage (Ai)
-    & DVC Data Tracking          KV-Cache Occupancy)            Calculation Engine
+
+```text
+                                 [ AETHERCONTROL CONTROL PLANE ]
+                                                │
+       ┌───────────────────────────────┬────────┴──────────────────────┬───────────────────────────────┐
+       ▼                               ▼                               ▼                               ▼
+ [ 1. Data Validation ]      [ 2. GRPO Alignment ]           [ 3. vLLM Engine ]              [ 4. K8s Infrastructure ]
+     "trainsight"              "rlhf-pipeline"                 "vllm-engine"                    "k8s-infra"
+ • Pre-flight Data Linter   • DeepSeek-R1 GRPO Training    • PagedAttention Block Pool     • GKE Spot GPU Cluster Manifests
+ • K8s InitContainer Guard  • Rule Verifiers (Math/Code)   • Chunked Prefill (2048 tok)    • KEDA Queue Depth Autoscaling
+ • Fail-Fast (Exit Code 1)  • No-Critic Advantage Engine   • Radix Tree Prefix Caching     • DCGM Exporter & Prometheus
 ```
 
 ---

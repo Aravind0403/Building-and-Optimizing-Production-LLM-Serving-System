@@ -1,4 +1,9 @@
-
-cat >> .gitignore << 'EOF'
 .DS_Store
 **/.DS_Store
+**/__pycache__/
+*.egg-info
+.pytest_cache/
+
+# Internal documentation & Q&A notes (kept local, excluded from public GitHub)
+Doc_Content/
+space/Doc_Content/

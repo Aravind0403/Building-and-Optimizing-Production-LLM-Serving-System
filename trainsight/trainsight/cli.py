@@ -53,20 +53,26 @@ def profile(
         "--strict",
         help="Exit with error code 1 if any warnings are found (ideal for K8s InitContainers / CI)",
     ),
+    tokenizer: Optional[str] = typer.Option(
+        None,
+        "--tokenizer",
+        "-k",
+        help="Optional HuggingFace model ID for exact model-aligned BPE token counting (e.g. Qwen/Qwen2.5-1.5B-Instruct)",
+    ),
 ):
     """Profile dataset quality, token distributions, and failure risks before training."""
 
     console.print()
     console.print(
         Panel(
-            Text(f"🔍 Profiling dataset: {dataset.name}\nType: {dataset_type.upper()} | Max Target Length: {max_seq_len} tokens", style="bold cyan"),
+            Text(f"🔍 Profiling dataset: {dataset.name}\nType: {dataset_type.upper()} | Max Target Length: {max_seq_len} tokens" + (f" | Tokenizer: {tokenizer}" if tokenizer else ""), style="bold cyan"),
             title="[bold white]trainsight validator[/bold white]",
             border_style="cyan",
         )
     )
 
     if dataset_type.lower() == "sft":
-        inspector = SFTInspector(max_seq_len_threshold=max_seq_len)
+        inspector = SFTInspector(max_seq_len_threshold=max_seq_len, tokenizer_name=tokenizer)
         report = inspector.inspect_file(dataset)
 
         table = Table(title="📊 SFT Dataset Metrics Summary", border_style="dim")
