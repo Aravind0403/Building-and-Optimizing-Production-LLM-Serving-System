@@ -61,9 +61,9 @@ flowchart TD
 
 | Module | Location | Primary Command | Key Production Feature | Unit Tests |
 | :--- | :--- | :--- | :--- | :--- |
-| **`trainsight`** | `trainsight/` | `trainsight profile` | Pre-flight dataset linter & Kubernetes InitContainer guard. Detects CUDA OOM risks (`> 2048` tokens), sequence length variance ($\sigma > 0.75\mu$), and empty completions. | ✅ 4/4 Passed |
+| **`trainsight`** | `trainsight/` | `trainsight profile` | Pre-flight dataset profiler & Kubernetes InitContainer guard. Features Two-Factor Law profiling ($\sigma/\mu$ & $P_{99}$), model-specific `--tokenizer` BPE counting, and fail-fast OOM risk alerts. | ✅ 4/4 Passed |
 | **`vllm-engine`** | `vllm-engine/` | `vllm-bench benchmark` | Production engine config manager & SLA streaming benchmark generator ($P_{50}/P_{99}$ TTFT, TPOT, RPS). Tunes Chunked Prefill, PagedAttention, and Prefix Caching. | ✅ 3/3 Passed |
-| **`k8s-infra`** | `k8s-infra/` | `make cloud-up` | Production GKE Spot GPU cluster manifests, Kubernetes Secrets (`secrets.yaml`), KEDA autoscaling (`keda-autoscaler.yaml`), DCGM exporter (`dcgm-exporter.yaml`), and Prometheus/Grafana stack. | ✅ Verified Live |
+| **`k8s-infra`** | `k8s-infra/` | `make cloud-up` | Production GKE Spot GPU cluster manifests (`terminationGracePeriodSeconds: 30` drain), KEDA autoscaling (`keda-autoscaler.yaml`), DCGM exporter (`dcgm-exporter.yaml`), and Prometheus/Grafana stack. | ✅ Verified Live |
 | **`rlhf-pipeline`** | `rlhf-pipeline/` | `rlhf-train train-steps` | DeepSeek-R1 style Group Relative Policy Optimization (GRPO) training pipeline using HuggingFace `trl.GRPOTrainer`, DeepSpeed ZeRO-3, and rule-based verifier rewards. | ✅ 7/7 Passed |
 
 ---
