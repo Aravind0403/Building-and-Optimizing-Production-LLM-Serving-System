@@ -130,6 +130,15 @@ All artifacts from this project are published to the HuggingFace Hub for open-so
 
 ## 🚀 Quickstart & One-Command Execution
 
+### 1. One-Command Mac M1/M2/M3 Apple Silicon Demo (`demo/run_gsm8k_grpo_mps.py`)
+Run the full 3-step pipeline (TrainSight 2.0 Profiling $\to$ DeepSeek-R1 GRPO Alignment $\to$ Before/After Evaluation) on any 16GB Mac in <15 minutes:
+
+```bash
+# Execute standalone GSM8K GRPO training & evaluation harness on Mac Apple Silicon
+python3 demo/run_gsm8k_grpo_mps.py --samples 500 --steps 50
+```
+
+### 2. Standard Platform Workflows
 ```bash
 # Clone the repository
 git clone https://github.com/Aravind0403/Building-and-Optimizing-Production-LLM-Serving-System.git
